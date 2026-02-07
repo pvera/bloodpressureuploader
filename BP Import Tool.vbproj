@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>BP_Import_Tool</RootNamespace>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.2" />
+    <PackageReference Include="Selenium.WebDriver" Version="4.38.0" />
+    <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="144.0.7559.20" />
+    <PackageReference Include="SeleniumExtras.WaitHelpers" Version="1.0.2" />
+    <PackageReference Include="WebDriverManager" Version="2.17.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="BP Import Tool.Tests\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Tests\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
