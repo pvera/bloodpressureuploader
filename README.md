@@ -17,3 +17,4 @@ You can use bp_readings.sample.csv as a template for your readings data.
 
 When you build the project in Visual Studio you will get a separate Chrome session, which will send you to your HMO's login page. Once logged-in, go back to the terminal that opened when you started the build and hit enter, this will signal the code that it is ready to navigate to the input furm and do its thing.
 
+123
