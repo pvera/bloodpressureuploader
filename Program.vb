@@ -27,20 +27,24 @@ Module AutoSubmitter
             Return
         End If
 
-        ' Load configuration from appsettings.json
+        ' Load configuration from appsettings.json in the application root directory
+        Dim appRootPath As String = AppDomain.CurrentDomain.BaseDirectory
         Dim config As IConfigurationRoot = New ConfigurationBuilder() _
-    .SetBasePath(AppDomain.CurrentDomain.BaseDirectory) _
-    .AddJsonFile("appsettings.json", optional:=False, reloadOnChange:=True) _
-    .Build()
+            .SetBasePath(appRootPath) _
+            .AddJsonFile("appsettings.json", optional:=False, reloadOnChange:=True) _
+            .Build()
 
         LoginUrl = config("BP_LOGIN_URL")
         FormUrl = config("BP_FORM_URL")
         CsvPath = config("CSV_PATH")
 
+        Dim resolvedCsvPath As String = ResolveCsvPath(CsvPath, appRootPath)
+        Console.WriteLine($"CSV_PATH configured as: {CsvPath}")
+        Console.WriteLine($"Resolved CSV path: {resolvedCsvPath}")
         Console.WriteLine("Initializing Browser Automation...")
 
         ' 1. Read and Parse the CSV Data
-        Dim records As List(Of BpRecord) = CsvParser.ParseCsv(CsvPath)
+        Dim records As List(Of BpRecord) = CsvParser.ParseCsv(resolvedCsvPath)
         Console.WriteLine($"Loaded {records.Count} records to process.")
 
         ' 2. Setup ChromeDriver with automatic version management
@@ -136,6 +140,34 @@ Module AutoSubmitter
         Console.ReadKey()
     End Sub
 
+    Private Function ResolveCsvPath(configuredPath As String, appBasePath As String) As String
+        If String.IsNullOrWhiteSpace(configuredPath) Then
+            Return configuredPath
+        End If
+
+        If Path.IsPathRooted(configuredPath) Then
+            Return configuredPath
+        End If
+
+        Dim candidatePaths As New List(Of String) From {
+            Path.Combine(appBasePath, configuredPath),
+            Path.Combine(Directory.GetCurrentDirectory(), configuredPath)
+        }
+
+        Dim appBaseParent = Directory.GetParent(appBasePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+        If appBaseParent IsNot Nothing AndAlso appBaseParent.Parent IsNot Nothing AndAlso appBaseParent.Parent.Parent IsNot Nothing Then
+            candidatePaths.Add(Path.Combine(appBaseParent.Parent.Parent.FullName, configuredPath))
+        End If
+
+        For Each candidate In candidatePaths.Distinct()
+            If File.Exists(candidate) Then
+                Return candidate
+            End If
+        Next
+
+        Return candidatePaths.First()
+    End Function
+
 End Module
 
 Public Class CsvParser
@@ -150,7 +182,7 @@ Public Class CsvParser
         Dim output As New List(Of BpRecord)
 
         If Not File.Exists(filePath) Then
-            Console.WriteLine("CSV File not found.")
+            Console.WriteLine($"CSV File not found: {filePath}")
             Return output
         End If
 
